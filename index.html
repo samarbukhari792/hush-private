@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#10161B" />
+<title>hush — private messages</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============================================================= -->
+  <!-- LOGIN                                                          -->
+  <!-- ============================================================= -->
+  <section id="screen-login" class="screen screen--active screen--auth">
+    <div class="auth-card">
+      <h1 class="wordmark">hush<span class="wordmark__dot">.</span></h1>
+      <p class="auth-tagline">Text only. Nothing else.</p>
+
+      <form id="form-login" class="form" novalidate>
+        <label class="field">
+          <span class="field__label">User ID</span>
+          <input id="login-id" type="text" placeholder="USR-7K4P92" autocomplete="username" required />
+        </label>
+        <label class="field">
+          <span class="field__label">Password</span>
+          <input id="login-password" type="password" placeholder="Password" autocomplete="current-password" required />
+        </label>
+        <p id="login-error" class="field-error" role="alert"></p>
+        <button id="login-submit" type="submit" class="btn btn--primary btn--full">Log in</button>
+      </form>
+
+      <p class="auth-switch">
+        New here? <a href="#" id="link-go-register">Create an account</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- REGISTER                                                       -->
+  <!-- ============================================================= -->
+  <section id="screen-register" class="screen screen--auth">
+    <div class="auth-card">
+      <h1 class="wordmark">hush<span class="wordmark__dot">.</span></h1>
+      <p class="auth-tagline">Just a name and a password.</p>
+
+      <form id="form-register" class="form" novalidate>
+        <label class="field">
+          <span class="field__label">Name</span>
+          <input id="register-name" type="text" placeholder="Any name" autocomplete="off" maxlength="40" required />
+        </label>
+        <label class="field">
+          <span class="field__label">Password</span>
+          <input id="register-password" type="password" placeholder="At least 8 characters" autocomplete="new-password" minlength="8" required />
+        </label>
+        <p id="register-error" class="field-error" role="alert"></p>
+        <button id="register-submit" type="submit" class="btn btn--primary btn--full">Create account</button>
+      </form>
+
+      <p class="auth-switch">
+        Already have an account? <a href="#" id="link-go-login">Log in</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- WELCOME / SHOW GENERATED PERMANENT ID                          -->
+  <!-- ============================================================= -->
+  <section id="screen-welcome-id" class="screen screen--auth">
+    <div class="auth-card">
+      <p class="auth-tagline">This is your permanent User ID.</p>
+      <div class="id-display" id="welcome-id-value">USR-000000</div>
+      <p class="auth-note">
+        It can't be changed and it's the only way anyone can find you.
+        Write it down somewhere safe.
+      </p>
+      <button id="welcome-id-continue" type="button" class="btn btn--primary btn--full">I've saved it — continue</button>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- NEW DEVICE / LOST LOCAL KEY                                    -->
+  <!-- ============================================================= -->
+  <section id="screen-new-device" class="screen screen--auth">
+    <div class="auth-card">
+      <p class="auth-tagline">New device detected</p>
+      <p class="auth-note">
+        Messages are encrypted on your device, and the encryption key never
+        leaves it. This device doesn't have your original key, so older
+        messages can't be opened here — on either device.
+        Continuing will set up a new key so you can keep messaging.
+      </p>
+      <button id="new-device-continue" type="button" class="btn btn--primary btn--full">Continue</button>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- MAIN: CHAT LIST                                                -->
+  <!-- ============================================================= -->
+  <section id="screen-main" class="screen">
+    <header class="topbar">
+      <span class="topbar__title">Chats</span>
+      <div class="topbar__actions">
+        <button id="btn-open-search" class="icon-btn" aria-label="Search for a user">⌕</button>
+        <button id="btn-open-account" class="icon-btn" aria-label="Account">☰</button>
+      </div>
+    </header>
+
+    <ul id="chat-list" class="chat-list"></ul>
+    <div id="chat-list-empty" class="empty-state" hidden>
+      <p class="empty-state__title">No conversations yet</p>
+      <p class="empty-state__body">Search for a User ID to start one.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- SEARCH                                                         -->
+  <!-- ============================================================= -->
+  <section id="screen-search" class="screen">
+    <header class="topbar">
+      <button id="btn-back-from-search" class="icon-btn" aria-label="Back">‹</button>
+      <span class="topbar__title">Find someone</span>
+      <div class="topbar__actions"></div>
+    </header>
+
+    <div class="search-body">
+      <form id="form-search" class="form form--inline">
+        <input id="search-input" type="text" placeholder="USR-7K4P92" autocapitalize="characters" autocomplete="off" />
+        <button type="submit" class="btn btn--primary btn--compact">Search</button>
+      </form>
+      <p id="search-not-found" class="field-error field-error--visible" hidden></p>
+      <div id="search-result"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- CHAT                                                           -->
+  <!-- ============================================================= -->
+  <section id="screen-chat" class="screen screen--chat">
+    <header class="topbar">
+      <button id="btn-back-from-chat" class="icon-btn" aria-label="Back">‹</button>
+      <span id="chat-header-avatar" class="topbar__avatar"></span>
+      <div class="topbar__identity">
+        <span id="chat-header-name" class="topbar__name"></span>
+        <span id="chat-header-id" class="topbar__id"></span>
+      </div>
+      <div class="topbar__actions chat-menu-wrap">
+        <button id="chat-menu-btn" class="icon-btn" aria-label="Chat menu">⋮</button>
+        <div id="chat-menu" class="chat-menu">
+          <button id="chat-menu-delete" class="chat-menu__item">Delete Chat</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="chat-messages" class="chat-messages"></div>
+
+    <form id="form-chat" class="chat-input-bar">
+      <input id="chat-input" type="text" placeholder="Message" autocomplete="off" maxlength="20000" />
+      <button id="chat-send" type="submit" class="icon-btn icon-btn--send" aria-label="Send">➤</button>
+    </form>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- ACCOUNT                                                        -->
+  <!-- ============================================================= -->
+  <section id="screen-account" class="screen">
+    <header class="topbar">
+      <button id="btn-back-from-account" class="icon-btn" aria-label="Back">‹</button>
+      <span class="topbar__title">Account</span>
+      <div class="topbar__actions"></div>
+    </header>
+
+    <div class="account-body">
+      <div id="account-avatar" class="account-avatar-wrap"></div>
+      <div id="account-name" class="account-name"></div>
+      <div id="account-id" class="account-id"></div>
+
+      <div class="account-actions">
+        <button id="btn-logout" class="btn btn--secondary btn--full">Logout</button>
+        <button id="btn-delete-account" class="btn btn--danger btn--full">Delete Account</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- SHARED: confirm modal + toast                                  -->
+  <!-- ============================================================= -->
+  <div id="confirm-modal" class="modal-overlay" hidden>
+    <div class="modal">
+      <h2 id="confirm-modal-title" class="modal__title"></h2>
+      <p id="confirm-modal-body" class="modal__body"></p>
+      <div class="modal__actions">
+        <button id="confirm-modal-cancel" class="btn btn--secondary">Cancel</button>
+        <button id="confirm-modal-confirm" class="btn btn--danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="crypto.js"></script>
+  <script src="supabase-client.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
