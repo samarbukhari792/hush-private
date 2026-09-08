@@ -26,7 +26,6 @@
 const SUPABASE_URL = "https://pgrizvavodkksfeaahcl.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_zO0oEMOtiebV7WZJ-gsLEw_tBBKArdg";
 
-
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
@@ -34,13 +33,13 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
     detectSessionInUrl: false,
   },
 });
- 
+
 const AUTH_EMAIL_DOMAIN = "msgr.local";
- 
+
 function permanentIdToAuthEmail(permanentUserId) {
   return `${permanentUserId.toLowerCase()}@${AUTH_EMAIL_DOMAIN}`;
 }
- 
+
 /**
  * Registers a brand new account:
  *  1. Reserve a unique Permanent User ID from the database function
@@ -67,7 +66,7 @@ async function registerAccount(name, password) {
   if (password.length < 8) {
     throw new Error("Password must be at least 8 characters.");
   }
- 
+
   const { data: idData, error: idError } = await supabaseClient.rpc(
     "generate_permanent_user_id"
   );
@@ -76,7 +75,7 @@ async function registerAccount(name, password) {
   }
   const permanentUserId = idData;
   const authEmail = permanentIdToAuthEmail(permanentUserId);
- 
+
   const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
     email: authEmail,
     password,
@@ -89,10 +88,10 @@ async function registerAccount(name, password) {
     }
     throw new Error("Could not create your account. Please try again.");
   }
- 
-  const publicKeyJson = await window.MessengerCrypto.generateAndStoreKeyPair(signUpData.user.id);
+
+  const publicKeyJson = await window.MessengerCrypto.generateAndStoreKeyPair();
   const iconId = Math.floor(Math.random() * 8);
- 
+
   const { error: profileError } = await supabaseClient.from("profiles").insert({
     id: signUpData.user.id,
     permanent_user_id: permanentUserId,
@@ -100,16 +99,16 @@ async function registerAccount(name, password) {
     icon_id: iconId,
     public_key: publicKeyJson,
   });
- 
+
   if (profileError) {
     throw new Error(
       "Account created but profile setup failed. Please try logging in, or contact support."
     );
   }
- 
+
   return { permanentUserId, name: trimmedName };
 }
- 
+
 /**
  * Logs in with a Permanent User ID + password.
  * Looks up whether the id exists first purely to give a clean
@@ -118,7 +117,7 @@ async function registerAccount(name, password) {
  */
 async function loginWithUserId(permanentUserId, password) {
   const normalizedId = permanentUserId.trim().toUpperCase();
- 
+
   const { data: exists, error: existsError } = await supabaseClient.rpc(
     "permanent_user_id_exists",
     { pid: normalizedId }
@@ -129,29 +128,29 @@ async function loginWithUserId(permanentUserId, password) {
   if (!exists) {
     throw new Error("User ID not found.");
   }
- 
+
   const authEmail = permanentIdToAuthEmail(normalizedId);
   const { data, error } = await supabaseClient.auth.signInWithPassword({
     email: authEmail,
     password,
   });
- 
+
   if (error) {
     throw new Error("Incorrect User ID or password.");
   }
- 
+
   return data;
 }
- 
+
 async function logout() {
   await supabaseClient.auth.signOut();
 }
- 
+
 async function getCurrentSession() {
   const { data } = await supabaseClient.auth.getSession();
   return data.session;
 }
- 
+
 /**
  * Calls the delete-account Edge Function (needs the service role key,
  * which only exists server-side — see supabase/functions/delete-account).
@@ -159,19 +158,19 @@ async function getCurrentSession() {
 async function deleteAccount() {
   const session = await getCurrentSession();
   if (!session) throw new Error("Session expired. Please log in again.");
- 
+
   const { data, error } = await supabaseClient.functions.invoke("delete-account", {
     headers: { Authorization: `Bearer ${session.access_token}` },
   });
- 
+
   if (error || !data?.success) {
     throw new Error("Account deletion failed. Please try again.");
   }
- 
-  await window.MessengerCrypto.clearDeviceKey(session.user.id);
+
+  await window.MessengerCrypto.clearDeviceKey();
   await supabaseClient.auth.signOut();
 }
- 
+
 window.MessengerAuth = {
   supabaseClient,
   registerAccount,
@@ -180,4 +179,3 @@ window.MessengerAuth = {
   getCurrentSession,
   deleteAccount,
 };
- 
