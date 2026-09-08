@@ -41,13 +41,30 @@
  *   "untraceable" or "impossible to track": Supabase still knows WHO
  *   messaged WHOM and WHEN (sender_id, receiver_id, created_at are not
  *   encrypted, only the message text is).
+ *
+ * PER-ACCOUNT KEY SCOPING:
+ *   The private key is stored under a key that includes the account's
+ *   own user id (deviceKeyEntry(userId) below), NOT a single fixed slot.
+ *   This matters because more than one account can be used from the
+ *   same browser/device (two accounts in two windows of the same
+ *   non-incognito browser share the same IndexedDB origin storage). A
+ *   single fixed slot would let the second account's key generation
+ *   silently overwrite the first account's key, corrupting encryption
+ *   for whichever account no longer matches what's in storage — every
+ *   function below takes the caller's own user id for exactly this
+ *   reason. A one-time migration path reads a legacy unscoped key if
+ *   present, for anyone who used the app before this fix.
  */
 
 const EC_CURVE = "P-256";
 const AES_LENGTH = 256;
 const DB_NAME = "messenger-keys";
 const DB_STORE = "keys";
-const PRIVATE_KEY_ENTRY = "device-private-key";
+const LEGACY_PRIVATE_KEY_ENTRY = "device-private-key"; // pre-scoping key name
+
+function deviceKeyEntry(userId) {
+  return `device-private-key:${userId}`;
+}
 
 // ---------------------------------------------------------------------
 // IndexedDB helpers — this is the ONLY place the private key is stored.
@@ -84,11 +101,11 @@ async function idbSet(key, value) {
   });
 }
 
-async function idbClear() {
+async function idbDelete(key) {
   const db = await openKeyDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(DB_STORE, "readwrite");
-    tx.objectStore(DB_STORE).clear();
+    tx.objectStore(DB_STORE).delete(key);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
@@ -123,36 +140,57 @@ function base64ToBuf(b64) {
  * ourselves across page reloads via structured clone; it is still never
  * transmitted anywhere), and returns the exportable public key as a
  * JSON string ready to save in profiles.public_key.
+ * `userId` scopes the stored key to this specific account — see the
+ * PER-ACCOUNT KEY SCOPING note above.
  */
-async function generateAndStoreKeyPair() {
+async function generateAndStoreKeyPair(userId) {
   const keyPair = await crypto.subtle.generateKey(
     { name: "ECDH", namedCurve: EC_CURVE },
     true,
     ["deriveKey", "deriveBits"]
   );
 
-  await idbSet(PRIVATE_KEY_ENTRY, keyPair.privateKey);
+  await idbSet(deviceKeyEntry(userId), keyPair.privateKey);
 
   const publicJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
   return JSON.stringify(publicJwk);
 }
 
-/** Returns the device's stored private CryptoKey, or null if none exists. */
-async function getStoredPrivateKey() {
-  return idbGet(PRIVATE_KEY_ENTRY);
+/**
+ * Returns this account's stored private CryptoKey on this device, or
+ * null if none exists. Falls back to (and migrates) a legacy unscoped
+ * key for anyone who used the app before keys were scoped per-account —
+ * see PER-ACCOUNT KEY SCOPING above.
+ */
+async function getStoredPrivateKey(userId) {
+  const scopedKey = deviceKeyEntry(userId);
+  const existing = await idbGet(scopedKey);
+  if (existing !== null) return existing;
+
+  const legacy = await idbGet(LEGACY_PRIVATE_KEY_ENTRY);
+  if (legacy !== null) {
+    // One-time migration: claim the legacy slot for this account and
+    // remove it, so a second account on the same device can't also
+    // claim it later.
+    await idbSet(scopedKey, legacy);
+    await idbDelete(LEGACY_PRIVATE_KEY_ENTRY);
+    return legacy;
+  }
+
+  return null;
 }
 
-/** True if this device has a private key ready to use. */
-async function hasDeviceKey() {
-  const key = await getStoredPrivateKey();
+/** True if this account has a private key ready to use on this device. */
+async function hasDeviceKey(userId) {
+  const key = await getStoredPrivateKey(userId);
   return key !== null;
 }
 
-/** Wipes the local private key (used on logout is NOT necessary, but on
- * account deletion we clear it so a reused browser doesn't hold onto a
- * stale key). */
-async function clearDeviceKey() {
-  await idbClear();
+/** Wipes this account's local private key only — other accounts' keys
+ * on the same device/browser are left untouched. Used on account
+ * deletion so a reused browser doesn't hold onto a stale key. */
+async function clearDeviceKey(userId) {
+  await idbDelete(deviceKeyEntry(userId));
 }
 
 async function importPublicKeyFromJson(jsonStr) {
@@ -186,9 +224,10 @@ async function deriveSharedAesKey(myPrivateKey, theirPublicKeyJson) {
  * matching private key can decrypt it. Returns a JSON string:
  *   { "iv": "<base64>", "ciphertext": "<base64>" }
  * ready to store directly in messages.message_content.
+ * `myUserId` selects which account's locally-stored private key to use.
  */
-async function encryptMessage(plaintext, theirPublicKeyJson) {
-  const myPrivateKey = await getStoredPrivateKey();
+async function encryptMessage(plaintext, theirPublicKeyJson, myUserId) {
+  const myPrivateKey = await getStoredPrivateKey(myUserId);
   if (!myPrivateKey) throw new Error("No local encryption key on this device.");
 
   const aesKey = await deriveSharedAesKey(myPrivateKey, theirPublicKeyJson);
@@ -211,12 +250,13 @@ async function encryptMessage(plaintext, theirPublicKeyJson) {
  * Decrypts a stored message_content JSON string. `theirPublicKeyJson`
  * must be the OTHER participant's public key (the sender, if I'm
  * reading an incoming message; the receiver, if I'm re-reading my own
- * sent message).
+ * sent message). `myUserId` selects which account's locally-stored
+ * private key to use.
  * Returns the plaintext string, or throws if it cannot be decrypted
  * (e.g. this device never had the matching private key).
  */
-async function decryptMessage(storedJson, theirPublicKeyJson) {
-  const myPrivateKey = await getStoredPrivateKey();
+async function decryptMessage(storedJson, theirPublicKeyJson, myUserId) {
+  const myPrivateKey = await getStoredPrivateKey(myUserId);
   if (!myPrivateKey) throw new Error("No local encryption key on this device.");
 
   const { iv, ciphertext } = JSON.parse(storedJson);
