@@ -28,7 +28,6 @@
   let currentChatPartner = null; // profile-shaped object of the open chat's other participant
   let realtimeChannel = null;
   let chatListCache = []; // last fetched chat list, for quick re-render
-  let lastRenderedSenderId = null; // tracks bubble grouping within the open chat
 
   // -------------------------------------------------------------------
   // Small DOM helpers
@@ -110,7 +109,7 @@
       return;
     }
 
-    const hasKey = await Crypto.hasDeviceKey(me.id);
+    const hasKey = await Crypto.hasDeviceKey();
     if (!hasKey) {
       showScreen("screen-new-device");
       return;
@@ -199,7 +198,7 @@
       const data = await window.MessengerAuth.loginWithUserId(id, password);
       await loadMyProfile(data.user.id);
 
-      const hasKey = await Crypto.hasDeviceKey(me.id);
+      const hasKey = await Crypto.hasDeviceKey();
       if (!hasKey) {
         showScreen("screen-new-device");
       } else {
@@ -222,7 +221,7 @@
     button.disabled = true;
     button.textContent = "Setting up…";
     try {
-      const publicKeyJson = await Crypto.generateAndStoreKeyPair(me.id);
+      const publicKeyJson = await Crypto.generateAndStoreKeyPair();
       const { error } = await sb
         .from("profiles")
         .update({ public_key: publicKeyJson })
@@ -265,7 +264,7 @@
       chatListCache.map(async (row) => {
         let preview = "…";
         try {
-          preview = await Crypto.decryptMessage(row.last_message_content, row.counterpart_public_key, me.id);
+          preview = await Crypto.decryptMessage(row.last_message_content, row.counterpart_public_key);
         } catch {
           preview = "[Unable to decrypt on this device]";
         }
@@ -274,10 +273,9 @@
     );
 
     listEl.innerHTML = "";
-    rows.forEach(({ row, preview }, i) => {
+    for (const { row, preview } of rows) {
       const li = document.createElement("li");
       li.className = "chat-row";
-      li.style.setProperty("--row-i", i);
       li.tabIndex = 0;
       li.dataset.counterpartId = row.counterpart_id;
 
@@ -307,7 +305,7 @@
         })
       );
       listEl.appendChild(li);
-    });
+    }
   }
 
   // -------------------------------------------------------------------
@@ -389,7 +387,6 @@
     $("#chat-header-avatar").appendChild(iconEl(counterpart.icon_id));
     $("#chat-messages").innerHTML = "";
     $("#chat-input").value = "";
-    lastRenderedSenderId = null;
     showScreen("screen-chat");
 
     const { data, error } = await sb
@@ -419,25 +416,19 @@
     // public key), regardless of who actually sent it.
     let text;
     try {
-      text = await Crypto.decryptMessage(msg.message_content, currentChatPartner.public_key, me.id);
+      text = await Crypto.decryptMessage(msg.message_content, currentChatPartner.public_key);
     } catch {
       text = "[Unable to decrypt this message on this device]";
     }
 
     const bubble = document.createElement("div");
     bubble.className = `bubble ${mine ? "bubble--mine" : "bubble--theirs"}`;
-    if (msg.sender_id === lastRenderedSenderId) {
-      bubble.classList.add("bubble--grouped");
-    }
-    lastRenderedSenderId = msg.sender_id;
-
     bubble.dataset.messageId = msg.id;
     bubble.innerHTML = `
       <div class="bubble__text"></div>
       <div class="bubble__time">${formatTime(msg.created_at)}</div>
     `;
     bubble.querySelector(".bubble__text").textContent = text;
-    bubble.addEventListener("click", () => bubble.classList.toggle("bubble--show-time"));
     $("#chat-messages").appendChild(bubble);
   }
 
@@ -457,7 +448,7 @@
     sendBtn.disabled = true;
 
     try {
-      const encrypted = await Crypto.encryptMessage(text, currentChatPartner.public_key, me.id);
+      const encrypted = await Crypto.encryptMessage(text, currentChatPartner.public_key);
       const { data, error } = await sb
         .from("messages")
         .insert({
