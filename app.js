@@ -110,7 +110,7 @@
       return;
     }
 
-    const hasKey = await Crypto.hasDeviceKey();
+    const hasKey = await Crypto.hasDeviceKey(me.id);
     if (!hasKey) {
       showScreen("screen-new-device");
       return;
@@ -199,7 +199,7 @@
       const data = await window.MessengerAuth.loginWithUserId(id, password);
       await loadMyProfile(data.user.id);
 
-      const hasKey = await Crypto.hasDeviceKey();
+      const hasKey = await Crypto.hasDeviceKey(me.id);
       if (!hasKey) {
         showScreen("screen-new-device");
       } else {
@@ -222,7 +222,7 @@
     button.disabled = true;
     button.textContent = "Setting up…";
     try {
-      const publicKeyJson = await Crypto.generateAndStoreKeyPair();
+      const publicKeyJson = await Crypto.generateAndStoreKeyPair(me.id);
       const { error } = await sb
         .from("profiles")
         .update({ public_key: publicKeyJson })
@@ -265,7 +265,7 @@
       chatListCache.map(async (row) => {
         let preview = "…";
         try {
-          preview = await Crypto.decryptMessage(row.last_message_content, row.counterpart_public_key);
+          preview = await Crypto.decryptMessage(row.last_message_content, row.counterpart_public_key, me.id);
         } catch {
           preview = "[Unable to decrypt on this device]";
         }
@@ -419,7 +419,7 @@
     // public key), regardless of who actually sent it.
     let text;
     try {
-      text = await Crypto.decryptMessage(msg.message_content, currentChatPartner.public_key);
+      text = await Crypto.decryptMessage(msg.message_content, currentChatPartner.public_key, me.id);
     } catch {
       text = "[Unable to decrypt this message on this device]";
     }
@@ -457,7 +457,7 @@
     sendBtn.disabled = true;
 
     try {
-      const encrypted = await Crypto.encryptMessage(text, currentChatPartner.public_key);
+      const encrypted = await Crypto.encryptMessage(text, currentChatPartner.public_key, me.id);
       const { data, error } = await sb
         .from("messages")
         .insert({
