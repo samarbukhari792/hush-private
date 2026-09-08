@@ -28,6 +28,7 @@
   let currentChatPartner = null; // profile-shaped object of the open chat's other participant
   let realtimeChannel = null;
   let chatListCache = []; // last fetched chat list, for quick re-render
+  let lastRenderedSenderId = null; // tracks bubble grouping within the open chat
 
   // -------------------------------------------------------------------
   // Small DOM helpers
@@ -273,9 +274,10 @@
     );
 
     listEl.innerHTML = "";
-    for (const { row, preview } of rows) {
+    rows.forEach(({ row, preview }, i) => {
       const li = document.createElement("li");
       li.className = "chat-row";
+      li.style.setProperty("--row-i", i);
       li.tabIndex = 0;
       li.dataset.counterpartId = row.counterpart_id;
 
@@ -305,7 +307,7 @@
         })
       );
       listEl.appendChild(li);
-    }
+    });
   }
 
   // -------------------------------------------------------------------
@@ -387,6 +389,7 @@
     $("#chat-header-avatar").appendChild(iconEl(counterpart.icon_id));
     $("#chat-messages").innerHTML = "";
     $("#chat-input").value = "";
+    lastRenderedSenderId = null;
     showScreen("screen-chat");
 
     const { data, error } = await sb
@@ -423,12 +426,18 @@
 
     const bubble = document.createElement("div");
     bubble.className = `bubble ${mine ? "bubble--mine" : "bubble--theirs"}`;
+    if (msg.sender_id === lastRenderedSenderId) {
+      bubble.classList.add("bubble--grouped");
+    }
+    lastRenderedSenderId = msg.sender_id;
+
     bubble.dataset.messageId = msg.id;
     bubble.innerHTML = `
       <div class="bubble__text"></div>
       <div class="bubble__time">${formatTime(msg.created_at)}</div>
     `;
     bubble.querySelector(".bubble__text").textContent = text;
+    bubble.addEventListener("click", () => bubble.classList.toggle("bubble--show-time"));
     $("#chat-messages").appendChild(bubble);
   }
 
