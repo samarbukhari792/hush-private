@@ -3,28 +3,21 @@
    Design tokens
    ===================================================================== */
 :root {
-  --bg:              #0C1013;
-  --bg-translucent:  rgba(12, 16, 19, 0.72);
-  --surface:         #14191D;
-  --surface-alt:     #1B2126;
-  --surface-raised:  #20272E;
-  --border:          #232A30;
-  --border-soft:     rgba(255, 255, 255, 0.06);
-  --text:            #ECEFF1;
-  --text-muted:      #7C8791;
-  --accent:          #74B39A;
-  --accent-soft:     rgba(116, 179, 154, 0.14);
-  --accent-strong:   #5E9880;
-  --accent-text:     #071411;
-  --danger:          #D08585;
-  --danger-strong:   #B96E6E;
+  --bg:            #10161B;
+  --surface:       #171F26;
+  --surface-alt:   #1E2830;
+  --border:        #263039;
+  --text:          #E7ECEF;
+  --text-muted:    #7E8C97;
+  --accent:        #6FA98A;
+  --accent-strong: #5B9077;
+  --accent-text:   #0D1512;
+  --danger:        #C97C7C;
+  --danger-strong: #B56666;
 
-  --radius-sm: 7px;
-  --radius-md: 13px;
-  --radius-lg: 19px;
-
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
 
   --font-serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -73,26 +66,6 @@ a {
   }
 }
 
-@keyframes fadeRiseIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes bubbleIn {
-  from { opacity: 0; transform: translateY(6px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes softPulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.45; }
-}
-
-@keyframes toastRise {
-  from { opacity: 0; transform: translate(-50%, 10px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
-}
-
 /* =====================================================================
    Screen management — one full-viewport screen visible at a time
    ===================================================================== */
@@ -106,7 +79,6 @@ a {
 .screen--active {
   display: flex;
   flex-direction: column;
-  animation: fadeRiseIn 260ms var(--ease-out);
 }
 
 /* =====================================================================
@@ -116,33 +88,18 @@ a {
   align-items: center;
   justify-content: center;
   padding: 32px 24px;
-  position: relative;
-  overflow: hidden;
-}
-
-.screen--auth::before {
-  content: "";
-  position: absolute;
-  top: -120px;
-  right: -100px;
-  width: 320px;
-  height: 320px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--accent-soft), transparent 70%);
-  pointer-events: none;
 }
 
 .auth-card {
   width: 100%;
   max-width: 360px;
-  position: relative;
 }
 
 .wordmark {
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
-  font-size: 42px;
+  font-size: 40px;
   color: var(--text);
   margin: 0 0 4px;
   letter-spacing: 0.3px;
@@ -150,15 +107,12 @@ a {
 
 .wordmark__dot {
   color: var(--accent);
-  display: inline-block;
-  animation: softPulse 3.2s ease-in-out infinite;
 }
 
 .auth-tagline {
   color: var(--text-muted);
   margin: 0 0 28px;
   font-size: 15px;
-  letter-spacing: 0.1px;
 }
 
 .auth-note {
@@ -180,13 +134,12 @@ a {
   font-size: 30px;
   letter-spacing: 1px;
   background: var(--surface);
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 22px 16px;
   text-align: center;
   margin-bottom: 20px;
   color: var(--accent);
-  animation: fadeRiseIn 320ms var(--ease-out) 80ms both;
 }
 
 /* =====================================================================
@@ -218,12 +171,11 @@ a {
 input[type="text"],
 input[type="password"] {
   background: var(--surface);
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 13px 14px;
   color: var(--text);
   width: 100%;
-  transition: border-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard);
 }
 
 input[type="text"]::placeholder,
@@ -234,7 +186,6 @@ input[type="password"]::placeholder {
 input[type="text"]:focus,
 input[type="password"]:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .field-error {
@@ -247,7 +198,6 @@ input[type="password"]:focus {
 
 .field-error--visible {
   display: block;
-  animation: fadeRiseIn 180ms var(--ease-out);
 }
 
 .btn {
@@ -257,17 +207,16 @@ input[type="password"]:focus {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: filter 140ms ease, opacity 140ms ease, transform 100ms var(--ease-standard), background 140ms ease;
+  transition: opacity 120ms ease, transform 80ms ease;
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: default;
-  transform: none;
 }
 
 .btn--full {
@@ -284,18 +233,10 @@ input[type="password"]:focus {
   color: var(--accent-text);
 }
 
-.btn--primary:hover {
-  filter: brightness(1.08);
-}
-
 .btn--secondary {
   background: var(--surface-alt);
   color: var(--text);
-  border: 1px solid var(--border-soft);
-}
-
-.btn--secondary:hover {
-  background: var(--surface-raised);
+  border: 1px solid var(--border);
 }
 
 .btn--danger {
@@ -305,7 +246,7 @@ input[type="password"]:focus {
 }
 
 .btn--danger:hover {
-  background: rgba(208, 133, 133, 0.1);
+  background: rgba(201, 124, 124, 0.08);
 }
 
 /* =====================================================================
@@ -316,28 +257,18 @@ input[type="password"]:focus {
   align-items: center;
   gap: 10px;
   padding: 14px 12px;
-  border-bottom: 1px solid var(--border-soft);
-  background: var(--bg-translucent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
   position: sticky;
   top: 0;
   z-index: 5;
   flex-shrink: 0;
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .topbar,
-  .chat-input-bar {
-    background: var(--bg);
-  }
-}
-
 .topbar__title {
   font-size: 18px;
   font-weight: 600;
   flex: 1;
-  letter-spacing: 0.1px;
 }
 
 .topbar__actions {
@@ -384,15 +315,10 @@ input[type="password"]:focus {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 140ms ease, transform 100ms var(--ease-standard);
 }
 
 .icon-btn:hover {
   background: var(--surface-alt);
-}
-
-.icon-btn:active {
-  transform: scale(0.92);
 }
 
 .icon-btn--send {
@@ -419,7 +345,6 @@ input[type="password"]:focus {
   font-size: calc(var(--avatar-size) * 0.42);
   color: #0D1512;
   flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
 }
 
 /* =====================================================================
@@ -437,12 +362,9 @@ input[type="password"]:focus {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 13px 16px;
-  border-bottom: 1px solid var(--border-soft);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: background 140ms ease;
-  animation: fadeRiseIn 220ms var(--ease-out) both;
-  animation-delay: calc(var(--row-i, 0) * 30ms);
 }
 
 .chat-row:hover,
@@ -450,20 +372,11 @@ input[type="password"]:focus {
   background: var(--surface);
 }
 
-.chat-row:active {
-  background: var(--surface-alt);
-}
-
 .chat-row--search {
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   margin: 0 16px 12px;
   cursor: default;
-  animation: fadeRiseIn 220ms var(--ease-out);
-}
-
-.chat-row--search:hover {
-  background: transparent;
 }
 
 .chat-row__info {
@@ -523,7 +436,6 @@ input[type="password"]:focus {
   text-align: center;
   padding: 40px 24px;
   color: var(--text-muted);
-  animation: fadeRiseIn 260ms var(--ease-out);
 }
 
 .empty-state__title {
@@ -560,6 +472,7 @@ input[type="password"]:focus {
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
 .bubble {
@@ -569,32 +482,20 @@ input[type="password"]:focus {
   font-size: 15px;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  margin-top: 10px;
-  animation: bubbleIn 220ms var(--ease-out) both;
-  cursor: pointer;
-}
-
-.bubble:first-child {
-  margin-top: 0;
-}
-
-.bubble--grouped {
-  margin-top: 2px;
 }
 
 .bubble--mine {
   align-self: flex-end;
   background: var(--accent);
   color: var(--accent-text);
-  border-bottom-right-radius: 5px;
+  border-bottom-right-radius: 4px;
 }
 
 .bubble--theirs {
   align-self: flex-start;
-  background: var(--surface-raised);
+  background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--border-soft);
-  border-bottom-left-radius: 5px;
+  border-bottom-left-radius: 4px;
 }
 
 .bubble__text {
@@ -603,18 +504,9 @@ input[type="password"]:focus {
 
 .bubble__time {
   font-size: 11px;
-  opacity: 0;
-  max-height: 0;
-  margin-top: 0;
-  text-align: right;
-  overflow: hidden;
-  transition: opacity 150ms ease, max-height 150ms ease, margin-top 150ms ease;
-}
-
-.bubble--show-time .bubble__time {
   opacity: 0.65;
-  max-height: 20px;
   margin-top: 3px;
+  text-align: right;
 }
 
 .chat-input-bar {
@@ -623,26 +515,22 @@ input[type="password"]:focus {
   align-items: center;
   padding: 10px 12px;
   padding-bottom: max(10px, env(safe-area-inset-bottom));
-  border-top: 1px solid var(--border-soft);
-  background: var(--bg-translucent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  background: var(--bg);
   flex-shrink: 0;
 }
 
 .chat-input-bar input {
   flex: 1;
   background: var(--surface);
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 11px 16px;
   color: var(--text);
-  transition: border-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard);
 }
 
 .chat-input-bar input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .chat-menu-wrap {
@@ -654,13 +542,12 @@ input[type="password"]:focus {
   position: absolute;
   top: 44px;
   right: 0;
-  background: var(--surface-raised);
-  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   min-width: 160px;
   overflow: hidden;
   z-index: 10;
-  animation: fadeRiseIn 160ms var(--ease-out);
 }
 
 .chat-menu--open {
@@ -676,7 +563,6 @@ input[type="password"]:focus {
   color: var(--danger);
   cursor: pointer;
   font-size: 14px;
-  transition: background 120ms ease;
 }
 
 .chat-menu__item:hover {
@@ -696,7 +582,6 @@ input[type="password"]:focus {
 
 .account-avatar-wrap {
   margin-bottom: 16px;
-  animation: fadeRiseIn 260ms var(--ease-out);
 }
 
 .account-avatar-wrap .avatar {
@@ -713,8 +598,6 @@ input[type="password"]:focus {
   color: var(--text-muted);
   margin-top: 4px;
   margin-bottom: 32px;
-  font-family: var(--font-serif);
-  letter-spacing: 0.4px;
 }
 
 .account-actions {
@@ -731,15 +614,12 @@ input[type="password"]:focus {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(6, 8, 10, 0.72);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(8, 11, 14, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   z-index: 50;
-  animation: fadeRiseIn 160ms var(--ease-out);
 }
 
 .modal-overlay[hidden] {
@@ -747,13 +627,12 @@ input[type="password"]:focus {
 }
 
 .modal {
-  background: var(--surface-raised);
-  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 22px;
   width: 100%;
   max-width: 340px;
-  animation: fadeRiseIn 220ms var(--ease-out);
 }
 
 .modal__title {
@@ -781,16 +660,16 @@ input[type="password"]:focus {
   position: fixed;
   left: 50%;
   bottom: 24px;
-  transform: translate(-50%, 10px);
-  background: var(--surface-raised);
-  border: 1px solid var(--border-soft);
+  transform: translate(-50%, 12px);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   color: var(--text);
   padding: 11px 18px;
   border-radius: var(--radius-md);
   font-size: 14px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out);
+  transition: opacity 160ms ease, transform 160ms ease;
   max-width: 90vw;
   text-align: center;
   z-index: 100;
@@ -808,7 +687,7 @@ input[type="password"]:focus {
   .screen:not(.screen--auth) {
     max-width: 480px;
     margin: 0 auto;
-    border-left: 1px solid var(--border-soft);
-    border-right: 1px solid var(--border-soft);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
   }
 }
